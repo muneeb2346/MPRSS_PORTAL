@@ -2,14 +2,12 @@ import React from 'react';
 import { AlertTriangle, Shield, TrendingUp } from 'lucide-react';
 
 const RiskScore = ({ score, isMalicious, anomalyAlert }) => {
-  // Determine color based on score
   const getScoreColor = () => {
     if (score >= 67) return '#ef4444';
     if (score >= 34) return '#f59e0b';
     return '#10b981';
   };
 
-  // Determine label
   const getRiskLabel = () => {
     if (score >= 67) return 'MALICIOUS';
     if (score >= 34) return 'SUSPICIOUS';
@@ -19,10 +17,13 @@ const RiskScore = ({ score, isMalicious, anomalyAlert }) => {
   const scoreColor = getScoreColor();
   const riskLabel = getRiskLabel();
   
-  // Calculate circle properties
-  const radius = 120;
+  // Circle calculations
+  const size = 280;
+  const strokeWidth = 14;
+  const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
+  const center = size / 2;
 
   return (
     <div className="risk-score-container">
@@ -30,57 +31,75 @@ const RiskScore = ({ score, isMalicious, anomalyAlert }) => {
         <h3 className="section-title">Risk Assessment</h3>
         
         <div className="score-visual">
-          <svg className="circular-chart" width="280" height="280">
+          <svg 
+            width={size} 
+            height={size} 
+            viewBox={`0 0 ${size} ${size}`}
+            className="circular-chart"
+          >
             {/* Background circle */}
             <circle
               className="circle-bg"
+              cx={center}
+              cy={center}
               r={radius}
-              cx="140"
-              cy="140"
               stroke="#2a2e4a"
-              strokeWidth="12"
+              strokeWidth={strokeWidth}
               fill="none"
             />
             {/* Progress circle */}
             <circle
               className="circle-progress"
+              cx={center}
+              cy={center}
               r={radius}
-              cx="140"
-              cy="140"
               stroke={scoreColor}
-              strokeWidth="12"
+              strokeWidth={strokeWidth}
               fill="none"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={offset}
-              style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
+              transform={`rotate(-90 ${center} ${center})`}
             />
-            {/* Inner text */}
-            <text x="140" y="130" textAnchor="middle" className="score-text">
+            {/* Score number */}
+            <text
+              x={center}
+              y={center - 8}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="score-text"
+            >
               {score}
             </text>
-            <text x="140" y="155" textAnchor="middle" className="score-label">
+            {/* Score label */}
+            <text
+              x={center}
+              y={center + 30}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="score-label"
+            >
               RISK SCORE
             </text>
           </svg>
         </div>
 
         <div className={`risk-badge ${riskLabel.toLowerCase()}`}>
-          <Shield size={20} />
+          <Shield size={32} />
           <span>{riskLabel}</span>
         </div>
 
         {anomalyAlert && (
           <div className="anomaly-alert">
-            <AlertTriangle size={18} />
+            <AlertTriangle size={22} />
             <span>ANOMALY ALERT: ZERO-DAY BEHAVIOR DETECTED</span>
           </div>
         )}
 
         <div className="score-metadata">
           <div className="metadata-item">
-            <TrendingUp size={14} />
-            <span>Confidence: 94%</span>
+            <TrendingUp size={20} />
+            <span>Model Confidence: 94%</span>
           </div>
         </div>
       </div>

@@ -3,8 +3,10 @@ import UploadArea from './UploadArea';
 import RiskScore from './RiskScore';
 import RiskBreakdown from './RiskBreakdown';
 import LiveLog from './LiveLog';
+import FamilyClassification from './FamilyClassification';
+import XaiInsights from './XaiInsights';
 
-const Dashboard = () => {
+const Dashboard = ({ isSidebarCollapsed }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [riskData, setRiskData] = useState({
     score: 0,
@@ -17,6 +19,8 @@ const Dashboard = () => {
     anomaly: 0,
     mlConfidence: 0
   });
+  const [familyPredictions, setFamilyPredictions] = useState(null);
+  const [xaiFeatures, setXaiFeatures] = useState(null);
   const [logs, setLogs] = useState([]);
 
   const addLog = (message) => {
@@ -32,8 +36,9 @@ const Dashboard = () => {
   const simulateAnalysis = async (file) => {
     setIsAnalyzing(true);
     setLogs([]);
+    setFamilyPredictions(null);
+    setXaiFeatures(null);
     
-    // Initial log entries
     addLog(`APK uploaded: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
     await new Promise(resolve => setTimeout(resolve, 800));
     
@@ -43,8 +48,7 @@ const Dashboard = () => {
     addLog('[STATIC] Analyzing manifest permissions and API calls');
     await new Promise(resolve => setTimeout(resolve, 1200));
     
-    // Update static score
-    const staticScore = Math.floor(Math.random() * 30) + 65; // 65-95
+    const staticScore = Math.floor(Math.random() * 30) + 65;
     setBreakdownScores(prev => ({ ...prev, static: staticScore }));
     addLog(`[STATIC] Permission risk score: ${staticScore}/100`);
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -53,24 +57,42 @@ const Dashboard = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     addLog('[BEHAVIORAL] Running sandbox ML inference');
-    const behavioralScore = Math.floor(Math.random() * 25) + 70; // 70-95
+    const behavioralScore = Math.floor(Math.random() * 25) + 70;
     setBreakdownScores(prev => ({ ...prev, behavioral: behavioralScore }));
     await new Promise(resolve => setTimeout(resolve, 1200));
     
     addLog('[ANOMALY] ALERT: Obfuscated code patterns detected in DEX');
-    const anomalyScore = Math.floor(Math.random() * 20) + 75; // 75-95
+    const anomalyScore = Math.floor(Math.random() * 20) + 75;
     setBreakdownScores(prev => ({ ...prev, anomaly: anomalyScore }));
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     addLog('Running XGBoost classifier with 247 features...');
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    addLog('[SHAP] Feature importance computed (top contributor: SMS access)');
-    const mlConfidence = Math.floor(Math.random() * 15) + 85; // 85-100
-    setBreakdownScores(prev => ({ ...prev, mlConfidence: mlConfidence }));
+    const predictions = {
+      'TROJAN': 85,
+      'ADWARE': 45,
+      'SPYWARE': 62,
+      'RANSOMWARE': 28
+    };
+    setFamilyPredictions(predictions);
+    addLog('[CLASSIFIER] Malware family probabilities computed');
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    // Calculate final risk score (weighted average)
+    addLog('[SHAP] Feature importance computed (top contributor: SMS access)');
+    const mlConfidence = Math.floor(Math.random() * 15) + 85;
+    setBreakdownScores(prev => ({ ...prev, mlConfidence: mlConfidence }));
+    
+    const features = [
+      { name: 'CONTACTS_ACCESS', importance: 0.34, impact: 'positive', description: 'Access to contact list - often used by malware for propagation and data theft' },
+      { name: 'READ_SMS', importance: 0.28, impact: 'positive', description: 'SMS read permission - critical for OTP interception and 2FA bypass' },
+      { name: 'CAMERA_ACCESS', importance: 0.19, impact: 'positive', description: 'Camera access - can be used for surveillance and document theft' },
+      { name: 'WRITE_EXTERNAL_STORAGE', importance: 0.12, impact: 'positive', description: 'Storage write - allows file encryption (ransomware) or data exfiltration' },
+      { name: 'INTERNET', importance: 0.07, impact: 'positive', description: 'Internet access - enables C2 communication and data upload' }
+    ];
+    setXaiFeatures(features);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     const finalScore = Math.floor(
       (staticScore * 0.25 + 
        behavioralScore * 0.35 + 
@@ -96,26 +118,46 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="dashboard">
+    <div className={`dashboard ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className="dashboard-header">
         <h1>MPRSS Analysis Portal</h1>
-        <p>Malware Prediction & Risk Scoring</p>
+        <p>Malware Prediction & Risk Scoring System</p>
       </div>
       
-      <UploadArea onFileUpload={handleFileUpload} isAnalyzing={isAnalyzing} />
+      <div className="upload-log-row">
+        <div className="upload-section">
+          <UploadArea onFileUpload={handleFileUpload} isAnalyzing={isAnalyzing} />
+        </div>
+        <div className="log-section">
+  <LiveLog logs={logs} isActive={isAnalyzing} isAnalyzing={isAnalyzing} />
+</div>
+      </div>
       
-      <div className="dashboard-grid">
-        <div className="grid-left">
+      <div className="risk-assessment-row">
+        <div className="risk-gauge-section">
           <RiskScore 
             score={riskData.score}
             isMalicious={riskData.isMalicious}
             anomalyAlert={riskData.anomalyAlert}
           />
+        </div>
+        <div className="risk-breakdown-section">
           <RiskBreakdown scores={breakdownScores} />
         </div>
-        <div className="grid-right">
-          <LiveLog logs={logs} isActive={isAnalyzing} />
-        </div>
+      </div>
+      
+      <div className="full-width-section">
+        <FamilyClassification 
+          predictions={familyPredictions} 
+          isAnalyzing={isAnalyzing}
+        />
+      </div>
+      
+      <div className="full-width-section">
+        <XaiInsights 
+          features={xaiFeatures} 
+          isAnalyzing={isAnalyzing}
+        />
       </div>
     </div>
   );
