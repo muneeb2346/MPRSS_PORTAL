@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Upload, FileArchive, X, CheckCircle } from 'lucide-react';
 
 const UploadArea = ({ onFileUpload, isAnalyzing }) => {
@@ -75,10 +75,10 @@ const UploadArea = ({ onFileUpload, isAnalyzing }) => {
               <div className="upload-icon">
                 <Upload size={48} strokeWidth={1.5} />
               </div>
-              <h3>Drag & Drop</h3>
-              <p className="file-type">.APK File Here</p>
-              <p className="or-text">or</p>
-              <label className="browse-btn">
+              <h3 style={{fontSize: '28px'}}>Drag & Drop</h3>
+              <p className="file-type" style={{fontSize: '33px', fontWeight: 'bold'}}>.APK File Here</p>
+              <p className="or-text" style={{ fontSize: '30px' }}>or</p>
+                <label className="browse-btn" style={{ fontSize: '35px', padding: '14px 35px' }}>
                 click to browse
                 <input
                   type="file"
@@ -93,8 +93,8 @@ const UploadArea = ({ onFileUpload, isAnalyzing }) => {
             <div className="file-info">
               <FileArchive size={40} />
               <div className="file-details">
-                <p className="file-name">{selectedFile.name}</p>
-                <p className="file-size">
+                <p className="file-name" style={{ fontSize: '16px', fontWeight: 'bold' }}>{selectedFile.name}</p>
+                <p className="file-size" style={{ fontSize: '14px' }}>
                   {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                 </p>
               </div>
@@ -109,6 +109,7 @@ const UploadArea = ({ onFileUpload, isAnalyzing }) => {
 
         <button
           className={`analyze-btn ${isAnalyzing ? 'analyzing' : ''}`}
+          style={{ fontSize: '35px', padding: '16px' }}
           onClick={handleAnalyze}
           disabled={!selectedFile || isAnalyzing}
         >

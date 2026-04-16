@@ -8,6 +8,7 @@ import XaiInsights from './XaiInsights';
 
 const Dashboard = ({ isSidebarCollapsed }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [hasAnalysisStarted, setHasAnalysisStarted] = useState(false); // NEW: Track if analysis started
   const [riskData, setRiskData] = useState({
     score: 0,
     isMalicious: false,
@@ -35,6 +36,7 @@ const Dashboard = ({ isSidebarCollapsed }) => {
 
   const simulateAnalysis = async (file) => {
     setIsAnalyzing(true);
+    setHasAnalysisStarted(true); // NEW: Show other components after analysis starts
     setLogs([]);
     setFamilyPredictions(null);
     setXaiFeatures(null);
@@ -117,6 +119,16 @@ const Dashboard = ({ isSidebarCollapsed }) => {
     simulateAnalysis(file);
   };
 
+  // Function to reset and show only upload and log
+  const handleReset = () => {
+    setHasAnalysisStarted(false);
+    setLogs([]);
+    setRiskData({ score: 0, isMalicious: false, anomalyAlert: false });
+    setBreakdownScores({ static: 0, behavioral: 0, anomaly: 0, mlConfidence: 0 });
+    setFamilyPredictions(null);
+    setXaiFeatures(null);
+  };
+
   return (
     <div className={`dashboard ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className="dashboard-header">
@@ -124,41 +136,50 @@ const Dashboard = ({ isSidebarCollapsed }) => {
         <p>Malware Prediction & Risk Scoring System</p>
       </div>
       
+      {/* Upload and Log Section - ALWAYS VISIBLE */}
       <div className="upload-log-row">
         <div className="upload-section">
           <UploadArea onFileUpload={handleFileUpload} isAnalyzing={isAnalyzing} />
         </div>
         <div className="log-section">
-  <LiveLog logs={logs} isActive={isAnalyzing} isAnalyzing={isAnalyzing} />
-</div>
-      </div>
-      
-      <div className="risk-assessment-row">
-        <div className="risk-gauge-section">
-          <RiskScore 
-            score={riskData.score}
-            isMalicious={riskData.isMalicious}
-            anomalyAlert={riskData.anomalyAlert}
-          />
-        </div>
-        <div className="risk-breakdown-section">
-          <RiskBreakdown scores={breakdownScores} />
+          <LiveLog logs={logs} isActive={isAnalyzing} isAnalyzing={isAnalyzing} />
         </div>
       </div>
       
-      <div className="full-width-section">
-        <FamilyClassification 
-          predictions={familyPredictions} 
-          isAnalyzing={isAnalyzing}
-        />
-      </div>
-      
-      <div className="full-width-section">
-        <XaiInsights 
-          features={xaiFeatures} 
-          isAnalyzing={isAnalyzing}
-        />
-      </div>
+      {/* Results Section - ONLY VISIBLE AFTER ANALYSIS STARTS */}
+      {hasAnalysisStarted && (
+        <>
+          {/* Risk Score + Risk Breakdown Row */}
+          <div className="risk-assessment-row">
+            <div className="risk-gauge-section">
+              <RiskScore 
+                score={riskData.score}
+                isMalicious={riskData.isMalicious}
+                anomalyAlert={riskData.anomalyAlert}
+              />
+            </div>
+            <div className="risk-breakdown-section">
+              <RiskBreakdown scores={breakdownScores} />
+            </div>
+          </div>
+          
+          {/* Malware Family Classification */}
+          <div className="full-width-section">
+            <FamilyClassification 
+              predictions={familyPredictions} 
+              isAnalyzing={isAnalyzing}
+            />
+          </div>
+          
+          {/* XAI Insights */}
+          <div className="full-width-section">
+            <XaiInsights 
+              features={xaiFeatures} 
+              isAnalyzing={isAnalyzing}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };
