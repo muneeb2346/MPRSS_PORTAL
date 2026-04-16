@@ -1,4 +1,3 @@
-import React from 'react';
 import { Activity, FileCode, Brain, BarChart3 } from 'lucide-react';
 
 const RiskBreakdown = ({ scores }) => {

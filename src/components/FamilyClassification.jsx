@@ -1,16 +1,5 @@
-import React, { useState } from 'react';
-import { 
-  Skull, 
-  AlertTriangle, 
-  Eye, 
-  Lock, 
-  ChevronDown, 
-  ChevronUp,
-  Info,
-  FileText,
-  Network,
-  Clock
-} from 'lucide-react';
+import { useState } from 'react';
+import { Skull, AlertTriangle, Eye, Lock, ChevronDown, ChevronUp,Info,FileText,Network, Clock} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FamilyClassification = ({ predictions, isAnalyzing }) => {

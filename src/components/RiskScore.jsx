@@ -1,4 +1,3 @@
-import React from 'react';
 import { AlertTriangle, Shield, TrendingUp } from 'lucide-react';
 
 const RiskScore = ({ score, isMalicious, anomalyAlert }) => {
