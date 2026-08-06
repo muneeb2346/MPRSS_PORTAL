@@ -55,7 +55,7 @@ const Sidebar = ({ activeItem, setActiveItem, onToggle }) => {
               className={`nav-item ${activeItem === item.id ? 'active' : ''}`}
               onClick={() => setActiveItem(item.id)}
             >
-              <Icon size={24} />
+              <Icon size={34} />
               {!isCollapsed && <span>{item.label}</span>}
             </button>
           );

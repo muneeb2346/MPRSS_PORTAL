@@ -1,6 +1,6 @@
 import { AlertTriangle, Shield, TrendingUp } from 'lucide-react';
 
-const RiskScore = ({ score, isMalicious, anomalyAlert }) => {
+const RiskScore = ({ score, isMalicious, anomalyAlert, confidence }) => {
   const getScoreColor = () => {
     if (score >= 67) return '#ef4444';
     if (score >= 34) return '#f59e0b';
@@ -98,7 +98,11 @@ const RiskScore = ({ score, isMalicious, anomalyAlert }) => {
         <div className="score-metadata">
           <div className="metadata-item">
             <TrendingUp size={20} />
-            <span>Model Confidence: 94%</span>
+            <span>
+              {confidence != null
+                ? `Model Confidence: ${(confidence * 100).toFixed(0)}%`
+                : 'Model Confidence: —'}
+            </span>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import './index.css';
@@ -19,17 +19,17 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <Sidebar 
-        activeItem={activeItem} 
-        setActiveItem={(item) => {
-          setActiveItem(item);
-          scrollToSection(item);
-        }}
-        onToggle={handleSidebarToggle}
-      />
-      <Dashboard isSidebarCollapsed={isSidebarCollapsed} />
-    </div>
+      <div className="App">
+        <Sidebar 
+          activeItem={activeItem} 
+          setActiveItem={(item) => {
+            setActiveItem(item);
+            scrollToSection(item);
+          }}
+          onToggle={handleSidebarToggle}
+        />
+        <Dashboard isSidebarCollapsed={isSidebarCollapsed} />
+      </div>
   );
 }
 

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const XaiInsights = ({ features, isAnalyzing }) => {
+const XaiInsights = ({ features, isAnalyzing, confidence }) => {
   const [showExplanation, setShowExplanation] = useState(false);
 
   const defaultFeatures = [
@@ -31,7 +31,7 @@ const XaiInsights = ({ features, isAnalyzing }) => {
         <div className="xai-title">
           <Lightbulb size={40} color="#f59e0b" />
           <h3>XAI Insights</h3>
-          <span className="xai-badge">SHAP Values</span>
+          <span className="xai-badge">Random Forest Feature Importance</span>
         </div>
         <button 
           className="info-btn"
@@ -50,8 +50,12 @@ const XaiInsights = ({ features, isAnalyzing }) => {
         >
           <Shield size={28} />
           <p>
-            SHAP (SHapley Additive exPlanations) values show how each feature contributes to the final risk score. 
-            Positive impact means the feature increases risk. Values are normalized to sum to 1.
+            These values come from the trained Random Forest's built-in feature
+            importance — how much each permission/API call contributed to the
+            model's decisions during training. Positive impact means the feature
+            is associated with higher risk. This is a lightweight explanation
+            method; full SHAP/LIME per-sample explanations (Module 4) are planned
+            but not yet integrated.
           </p>
         </motion.div>
       )}
@@ -66,7 +70,7 @@ const XaiInsights = ({ features, isAnalyzing }) => {
         <div className="summary-item">
           <TrendingUp size={26} />
           <span>Model confidence:</span>
-          <strong>94%</strong>
+          <strong>{confidence != null ? `${(confidence * 100).toFixed(0)}%` : '—'}</strong>
         </div>
       </div>
 
@@ -133,7 +137,7 @@ const XaiInsights = ({ features, isAnalyzing }) => {
             <span className="shap-high">Higher Risk</span>
           </div>
           <p className="shap-note">
-            Force plot visualization available in full report
+            Per-sample SHAP force plots are planned for Module 4 (not yet integrated)
           </p>
         </div>
       </div>
@@ -143,7 +147,7 @@ const XaiInsights = ({ features, isAnalyzing }) => {
           <div className="loading-dots">
             <span></span><span></span><span></span>
           </div>
-          <p>Computing SHAP values...</p>
+          <p>Computing feature importance...</p>
         </div>
       )}
     </div>

@@ -6,26 +6,39 @@ import LiveLog from './LiveLog';
 import FamilyClassification from './FamilyClassification';
 import XaiInsights from './XaiInsights';
 
+const API_BASE = 'http://localhost:5000';
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const Dashboard = ({ isSidebarCollapsed }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [hasAnalysisStarted, setHasAnalysisStarted] = useState(false); // NEW: Track if analysis started
+  const [hasAnalysisStarted, setHasAnalysisStarted] = useState(false);
+  const [analysisError, setAnalysisError] = useState(null);
+
   const [riskData, setRiskData] = useState({
     score: 0,
     isMalicious: false,
-    anomalyAlert: false
+    anomalyAlert: false,
+    confidence: null
   });
+
+  // NOTE: only 'static' is a real model score right now (Module 2).
+  // behavioral / anomaly / mlConfidence are null until Modules 1, 3, 6
+  // are integrated — RiskBreakdown.jsx renders null as "Pending", not 0%,
+  // so the dashboard never implies a real score that doesn't exist yet.
   const [breakdownScores, setBreakdownScores] = useState({
     static: 0,
-    behavioral: 0,
-    anomaly: 0,
-    mlConfidence: 0
+    behavioral: null,
+    anomaly: null,
+    mlConfidence: null
   });
+
   const [familyPredictions, setFamilyPredictions] = useState(null);
   const [xaiFeatures, setXaiFeatures] = useState(null);
   const [logs, setLogs] = useState([]);
 
   const addLog = (message) => {
-    const time = new Date().toLocaleTimeString('en-US', { 
+    const time = new Date().toLocaleTimeString('en-US', {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
@@ -34,97 +47,99 @@ const Dashboard = ({ isSidebarCollapsed }) => {
     setLogs(prev => [...prev, { time, message }]);
   };
 
-  const simulateAnalysis = async (file) => {
+  const analyzeAPK = async (file) => {
     setIsAnalyzing(true);
-    setHasAnalysisStarted(true); // NEW: Show other components after analysis starts
+    setHasAnalysisStarted(true);
+    setAnalysisError(null);
     setLogs([]);
     setFamilyPredictions(null);
     setXaiFeatures(null);
-    
+
     addLog(`APK uploaded: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    addLog('Extracting DEX files and resources...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    addLog('[STATIC] Analyzing manifest permissions and API calls');
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    
-    const staticScore = Math.floor(Math.random() * 30) + 65;
-    setBreakdownScores(prev => ({ ...prev, static: staticScore }));
-    addLog(`[STATIC] Permission risk score: ${staticScore}/100`);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    addLog('[BEHAVIORAL] DETECTED: Suspicious crypto operations');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    addLog('[BEHAVIORAL] Running sandbox ML inference');
-    const behavioralScore = Math.floor(Math.random() * 25) + 70;
-    setBreakdownScores(prev => ({ ...prev, behavioral: behavioralScore }));
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    
-    addLog('[ANOMALY] ALERT: Obfuscated code patterns detected in DEX');
-    const anomalyScore = Math.floor(Math.random() * 20) + 75;
-    setBreakdownScores(prev => ({ ...prev, anomaly: anomalyScore }));
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    addLog('Running XGBoost classifier with 247 features...');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const predictions = {
-      'TROJAN': 85,
-      'ADWARE': 45,
-      'SPYWARE': 62,
-      'RANSOMWARE': 28
-    };
-    setFamilyPredictions(predictions);
-    addLog('[CLASSIFIER] Malware family probabilities computed');
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    addLog('[SHAP] Feature importance computed (top contributor: SMS access)');
-    const mlConfidence = Math.floor(Math.random() * 15) + 85;
-    setBreakdownScores(prev => ({ ...prev, mlConfidence: mlConfidence }));
-    
-    const features = [
-      { name: 'CONTACTS_ACCESS', importance: 0.34, impact: 'positive', description: 'Access to contact list - often used by malware for propagation and data theft' },
-      { name: 'READ_SMS', importance: 0.28, impact: 'positive', description: 'SMS read permission - critical for OTP interception and 2FA bypass' },
-      { name: 'CAMERA_ACCESS', importance: 0.19, impact: 'positive', description: 'Camera access - can be used for surveillance and document theft' },
-      { name: 'WRITE_EXTERNAL_STORAGE', importance: 0.12, impact: 'positive', description: 'Storage write - allows file encryption (ransomware) or data exfiltration' },
-      { name: 'INTERNET', importance: 0.07, impact: 'positive', description: 'Internet access - enables C2 communication and data upload' }
-    ];
-    setXaiFeatures(features);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const finalScore = Math.floor(
-      (staticScore * 0.25 + 
-       behavioralScore * 0.35 + 
-       anomalyScore * 0.3 + 
-       mlConfidence * 0.1)
-    );
-    
-    setRiskData({
-      score: finalScore,
-      isMalicious: finalScore >= 67,
-      anomalyAlert: anomalyScore > 80
-    });
-    
-    addLog(`Classification complete. Risk score computed: ${finalScore}/100`);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    addLog('✅ Analysis complete!');
-    setIsAnalyzing(false);
+    await sleep(300);
+
+    addLog('Sending APK to static analysis engine (Module 2)...');
+
+    const formData = new FormData();
+    formData.append('apk', file);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/analyze/apk`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || `Server error (HTTP ${response.status})`);
+      }
+
+      const data = await response.json();
+
+      addLog(`[STATIC] Parsed ${data.app_info.package_name} (${data.app_info.app_name})`);
+      await sleep(400);
+
+      addLog(`[STATIC] ${data.app_info.permissions_declared} permissions declared, ` +
+             `${data.app_info.total_active_features} risk-relevant features matched`);
+      await sleep(400);
+
+      addLog(`[STATIC] Random Forest static risk score: ${data.static_score}/100`);
+      await sleep(300);
+
+      setBreakdownScores({
+        static: data.static_score,
+        behavioral: null,
+        anomaly: null,
+        mlConfidence: null
+      });
+
+      if (data.top_features && data.top_features.length > 0) {
+        const features = data.top_features.map(f => ({
+          name: f.feature,
+          importance: f.importance,
+          impact: 'positive',
+          description: `${f.category} — contributes to the Random Forest static risk score`
+        }));
+        setXaiFeatures(features);
+        addLog('[XAI] Top contributing static features identified');
+        await sleep(300);
+      }
+
+      setRiskData({
+        score: data.static_score,
+        isMalicious: data.prediction === 'malicious',
+        anomalyAlert: false,   // Module 3 (Anomaly Detection) not yet integrated
+        confidence: data.confidence
+      });
+
+      addLog(`Classification (static only): ${data.prediction.toUpperCase()}`);
+      await sleep(300);
+      addLog('✅ Static analysis complete. Behavioral, anomaly, and family ' +
+             'classification modules are not yet integrated — this score ' +
+             'reflects static analysis only.');
+
+    } catch (err) {
+      console.error('Analysis failed:', err);
+      const message = err.message.includes('Failed to fetch')
+        ? 'Could not reach the analysis server. Is the Flask API running on localhost:5000?'
+        : err.message;
+      setAnalysisError(message);
+      addLog(`❌ ERROR: ${message}`);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleFileUpload = (file) => {
-    simulateAnalysis(file);
+    analyzeAPK(file);
   };
 
-  // Function to reset and show only upload and log
   const handleReset = () => {
     setHasAnalysisStarted(false);
+    setAnalysisError(null);
     setLogs([]);
-    setRiskData({ score: 0, isMalicious: false, anomalyAlert: false });
-    setBreakdownScores({ static: 0, behavioral: 0, anomaly: 0, mlConfidence: 0 });
+    setRiskData({ score: 0, isMalicious: false, anomalyAlert: false, confidence: null });
+    setBreakdownScores({ static: 0, behavioral: null, anomaly: null, mlConfidence: null });
     setFamilyPredictions(null);
     setXaiFeatures(null);
   };
@@ -135,8 +150,7 @@ const Dashboard = ({ isSidebarCollapsed }) => {
         <h1>MPRSS Analysis Portal</h1>
         <p>Malware Prediction & Risk Scoring System</p>
       </div>
-      
-      {/* Upload and Log Section - ALWAYS VISIBLE */}
+
       <div className="upload-log-row">
         <div className="upload-section">
           <UploadArea onFileUpload={handleFileUpload} isAnalyzing={isAnalyzing} />
@@ -145,37 +159,41 @@ const Dashboard = ({ isSidebarCollapsed }) => {
           <LiveLog logs={logs} isActive={isAnalyzing} isAnalyzing={isAnalyzing} />
         </div>
       </div>
-      
-      {/* Results Section - ONLY VISIBLE AFTER ANALYSIS STARTS */}
+
+      {analysisError && (
+        <div className="analysis-error-banner">
+          <strong>Analysis failed:</strong> {analysisError}
+        </div>
+      )}
+
       {hasAnalysisStarted && (
         <>
-          {/* Risk Score + Risk Breakdown Row */}
           <div className="risk-assessment-row">
             <div className="risk-gauge-section">
-              <RiskScore 
+              <RiskScore
                 score={riskData.score}
                 isMalicious={riskData.isMalicious}
                 anomalyAlert={riskData.anomalyAlert}
+                confidence={riskData.confidence}
               />
             </div>
             <div className="risk-breakdown-section">
               <RiskBreakdown scores={breakdownScores} />
             </div>
           </div>
-          
-          {/* Malware Family Classification */}
+
           <div className="full-width-section">
-            <FamilyClassification 
-              predictions={familyPredictions} 
+            <FamilyClassification
+              predictions={familyPredictions}
               isAnalyzing={isAnalyzing}
             />
           </div>
-          
-          {/* XAI Insights */}
+
           <div className="full-width-section">
-            <XaiInsights 
-              features={xaiFeatures} 
+            <XaiInsights
+              features={xaiFeatures}
               isAnalyzing={isAnalyzing}
+              confidence={riskData.confidence}
             />
           </div>
         </>

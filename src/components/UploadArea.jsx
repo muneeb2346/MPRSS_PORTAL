@@ -91,7 +91,7 @@ const UploadArea = ({ onFileUpload, isAnalyzing }) => {
             </>
           ) : (
             <div className="file-info">
-              <FileArchive size={40} />
+              <FileArchive size={50} />
               <div className="file-details">
                 <p className="file-name" style={{ fontSize: '16px', fontWeight: 'bold' }}>{selectedFile.name}</p>
                 <p className="file-size" style={{ fontSize: '14px' }}>
@@ -99,7 +99,7 @@ const UploadArea = ({ onFileUpload, isAnalyzing }) => {
                 </p>
               </div>
               <button className="remove-file" onClick={removeFile}>
-                <X size={20} />
+                <X size={30} />
               </button>
             </div>
           )}

@@ -38,25 +38,32 @@ const RiskBreakdown = ({ scores }) => {
       <div className="breakdown-grid">
         {breakdownItems.map((item, index) => {
           const Icon = item.icon;
+          const isPending = item.value == null;
           return (
-            <div key={item.name} className="breakdown-card" style={{ animationDelay: `${0.1 + index * 0.05}s` }}>
+            <div
+              key={item.name}
+              className={`breakdown-card ${isPending ? 'pending' : ''}`}
+              style={{ animationDelay: `${0.1 + index * 0.05}s`, opacity: isPending ? 0.55 : 1 }}
+            >
               <div className="breakdown-header">
                 <div className="icon-wrapper" style={{ background: `${item.color}20` }}>
-                  <Icon size={20} color={item.color} />
+                  <Icon size={30} color={item.color} />
                 </div>
                 <span className="breakdown-name">{item.name}</span>
               </div>
-              <div className="breakdown-value">{item.value}%</div>
+              <div className="breakdown-value">{isPending ? 'Pending' : `${item.value}%`}</div>
               <div className="progress-bar">
-                <div 
+                <div
                   className="progress-fill"
-                  style={{ 
-                    width: `${item.value}%`,
+                  style={{
+                    width: isPending ? '0%' : `${item.value}%`,
                     background: `linear-gradient(90deg, ${item.color}, ${item.color}dd)`
                   }}
                 />
               </div>
-              <p className="breakdown-desc">{item.description}</p>
+              <p className="breakdown-desc">
+                {isPending ? 'Module not yet integrated' : item.description}
+              </p>
             </div>
           );
         })}

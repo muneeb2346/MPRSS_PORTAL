@@ -88,9 +88,9 @@ const FamilyClassification = ({ predictions, isAnalyzing }) => {
     <div className="family-classification">
       <div className="section-header">
         <h3 className="section-title">Malware Family Classification</h3>
-        <div className="classification-badge">
+        <div className={`classification-badge ${!predictions ? 'pending' : ''}`}>
           <Network size={14} />
-          <span>ML Classifier: XGBoost v3.2</span>
+          <span>{predictions ? 'ML Classifier: XGBoost v3.2' : 'Module Not Yet Integrated'}</span>
         </div>
       </div>
 
@@ -110,7 +110,7 @@ const FamilyClassification = ({ predictions, isAnalyzing }) => {
             >
               <div className="family-header" onClick={() => toggleExpand(family.name)}>
                 <div className="family-icon" style={{ background: `${family.color}20` }}>
-                  <Icon size={24} color={family.color} />
+                  <Icon size={30} color={family.color} />
                 </div>
                 <div className="family-info">
                   <div className="family-name-row">
